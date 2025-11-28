@@ -5,219 +5,180 @@
 #include <string>
 using namespace std;
 
-//Hello this is my date class project with operator overloads and such!
-class date {
+// Class for the parked car info, both private and public for general info.
+class parkedcar {
 private:
-    int month, day, year;
+    string make;
+    string model;
+    string color;
+    string license;
+    int minsparked;
 
-	// Sets the maximum days in a month (probably seems familiar)
-    int maxdays(int m, int y) const {
-        if (m == 2) {
-
-			// Da leap year check (Still find it really cool how this works)
-            if ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))
-                return 29;
-            return 28;
-        }
-        if (m == 4 || m == 6 || m == 9 || m == 11)
-            return 30;
-        return 31;
-    }
-
-	// I was going to make it valid but isgood sounds funny to me
-    bool isgood(int m, int d, int y) const {
-        if (m < 1 || m > 12) return false;
-        if (d < 1 || d > maxdays(m, y)) return false;
-        if (y < 1) return false;
-        return true;
-    }
-
-	// Public members to set defaults and overload operators
 public:
-
-    // Fun fact its the first year in our current calendar system!!! (did you know that?) (4713 BC) (Julian calendar)(YEAH)
-    date() : month(1), day(1), year(4713) {}
-
-    // Constructor with parameters
-    date(int m, int d, int y) {
-        if (isgood(m, d, y)) {
-            month = m;
-            day = d;
-            year = y;
-        }
-        else {
-
-			// Everytime i see Invalid date given! I think of kaiba's defeat meme
-            cout << "Invalid date given! Setting to 1/1/4713." << endl;
-            month = 1;
-            day = 1;
-            year = 4713;
-        }
+    parkedcar(string mk, string mdl, string clr, string lic, int min)
+        : make(mk), model(mdl), color(clr), license(lic), minsparked(min) {
     }
 
-	// setdate() method to set the date after object creation (with the is good to check)
-    bool setdate(int m, int d, int y) {
-        if (!isgood(m, d, y))
-            return false;
-        month = m;
-        day = d;
-        year = y;
-        return true;
-    }
+    string getmake() const { return make;}
+    string getmodel() const { return model;}
+    string getcolor() const { return color;}
+    string getlicense() const { return license;}
+    int getminsparked() const { return minsparked;}
+};
 
-	// Prefix ++ to increment the date by one day
-    date& operator++() {
-        day++;
-        if (day > maxdays(month, year)) {
-            day = 1;
-            month++;
-            if (month > 12) {
-                month = 1;
-                year++;
-            }
-        }
-        return *this;
-    }
+// The parkingmeter class! Both private and public for the mins purchased for the meter.
+class parkingmeter {
+private:
+    int minspurchased;
 
-	// Postfix ++ to increment the date by one day once again
-    date operator++(int) {
-        date temp = *this;
-        ++(*this);
-        return temp;
-    }
+public:
+    parkingmeter(int mins) : minspurchased(mins) {}
 
-	// Prefix -- to decrement the date by one day
-    date& operator--() {
-        day--;
-        if (day < 1) {
-            month--;
-            if (month < 1) {
-                month = 12;
-                year--;
-            }
-            day = maxdays(month, year);
-        }
-        return *this;
-    }
+    int getminspurchased() const { return minspurchased; }
+};
 
-	// Postfix -- to decrement the date by one day once again 
-    date operator--(int) {
-        date temp = *this;
-        --(*this);
-        return temp;
-    }
+// The parking ticket class!
+class parkingticket {
+private:
+    string carmake;
+    string carmodel;
+    string carcolor;
+    string carlicense;
+    int minutesover;
+    double fine;
+    string officername;
+    string officerbadge;
 
-	// Subtracting the days between two dates
-    int operator-(const date& other) const {
+public:
+    parkingticket(const parkedcar& car, int minsover, string name, string badge) {
+        carmake = car.getmake();
+        carmodel = car.getmodel();
+        carcolor = car.getcolor();
+        carlicense = car.getlicense();
+        minutesover = minsover;
 
-		// First we have to convert both dates to numbers
-        return countdays() - other.countdays();
-    }
-
-    long countdays() const {
-        long days = 0;
-
-        // Next sdd all the days from previous years
-        for (int y = 1; y < year; y++) {
-            days += 365;
-            if ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))
-                days++;
+        // This is to calculate the fine (first hour/min is set to 25 due to the min fine and it being increased)
+        fine = 25.0;
+        int timeover = (minutesover - 60 + 59) / 60;
+        if (timeover > 0) {
+            fine += timeover * 10;
         }
 
-        // Next pt2 add days for previous months in current year
-        for (int m = 1; m < month; m++) {
-            days += maxdays(m, year);
-        }
-
-		// Finally add days in current month!
-        days += day;
-
-        return days;
+        officername = name;
+        officerbadge = badge;
     }
 
-	// Output operator << to display the date read from the keyboard
-    friend ostream& operator<<(ostream& out, const date& d) {
-        static string monthnames[12] =
-        { "January","February","March","April","May","June",
-         "July","August","September","October","November","December" };
-        out << monthnames[d.month - 1] << " " << d.day << ", " << d.year;
-        return out;
-    }
-
-    // Input operator >> to see the date typed on the keyboard
-    friend istream& operator>>(istream& in, date& d) {
-        int m, da, y;
-        cout << "Enter the month, day, year! (Please): ";
-        in >> m >> da >> y;
-
-        if (!d.setdate(m, da, y)) {
-            cout << "Invalid date! Keeping previous value.\n";
-        }
-        return in;
+	// Method to print the ticket info
+    void printtix() const {
+        cout << endl << "*** A Parking Ticket has been issued! ***" << endl;
+        cout << "The Officer's name is" << officername
+            << "Their Badge Number: " << officerbadge << endl;
+        cout << "The Vehicle license plate number: " << carlicense << endl;
+        cout << "The Make: " << carmake
+            << "The Model: " << carmodel
+            << "The Color: " << carcolor << endl;
+        cout << "The Total Minutes over: " << minutesover << endl;
+        cout << "Total Parking Fine is:" << fine << endl;
     }
 };
-// The test plan as laid out in the project sheet!
+
+// The popo (said like poe poe) class
+class policeofficer {
+private:
+    string name;
+    string badgenum;
+
+public:
+    policeofficer(string n, string b) : name(n), badgenum(b) {}
+
+    parkingticket* inspect(const parkedcar& car, const parkingmeter& meter) {
+        int parked = car.getminsparked();
+        int purchased = meter.getminspurchased();
+
+		// If the car is parked longer than purchased, issue a ticket :(
+        if (parked > purchased) {
+            int minsover = parked - purchased;
+            return new parkingticket(car, minsover, name, badgenum);
+        }
+        return nullptr;
+    }
+};
+
+// Finally the MAIN PROGRAM! (w/ TEST SCENARIOS as laid out on the sheet!!!)
 int main() {
 
-    cout << "\n==== DA TEST PLAN START ====\n\n";
+    cout << endl << "=============================== Scenario 1: Car Legally Parked ===============================" << endl;
+    {
+        parkedcar car("Toyota", "Camry", "Red", "XYZ123", 30);
+        parkingmeter meter(40);
+        policeofficer officer("John Doe", "5678");
 
-    // 1. Default constructor
-    date d1;
-    cout << "Default constructor: " << d1 << endl;
+        parkingticket* ticket = officer.inspect(car, meter);
 
-    // 2. Constructor with parameters
-    date d2(4, 18, 2018);
-    cout << "Parameterized constructor: " << d2 << endl;
+        if (ticket == nullptr)
+            cout << endl << "Luckily the car is legally parked. So no ticket was issued." << endl;
+        else {
+            ticket->printtix();
+            delete ticket;
+        }
+    }
 
-    // 3. Test setdate()
-    d1.setdate(3, 15, 2020);
-    cout << "After setdate(): " << d1 << endl;
+    cout << endl << "=============== Scenario 2: Car Illegally Parked (Less Than an Hour Over Time) ===============" << endl;
+    {
+        parkedcar car("Honda", "Accord", "Blue", "ABC987", 70);
+        parkingmeter meter(60);
+        policeofficer officer("Jane Smith", "1234");
 
-    // 4-6 invalid dates
-    cout << "Set to 13/45/2018: " << (d1.setdate(13, 45, 2018) ? "ACCEPTED" : "REJECTED") << endl;
-    cout << "Set to 4/31/2000: " << (d1.setdate(4, 31, 2000) ? "ACCEPTED" : "REJECTED") << endl;
-    cout << "Set to 2/29/2009: " << (d1.setdate(2, 29, 2009) ? "ACCEPTED" : "REJECTED") << endl;
+        parkingticket* ticket = officer.inspect(car, meter);
 
-    // 7 subtraction example #1
-    date a(4, 10, 2014);
-    date b(4, 18, 2014);
-    cout << endl << "4/18/2014 - 4/10/2014 = " << (b - a) << " days" << endl;
+        if (ticket)
+            ticket->printtix();
+        delete ticket;
+    }
 
-    // 8 subtraction example #2
-    date c1(2, 2, 2006);
-    date c2(11, 10, 2003);
-    cout << "2/2/2006 - 11/10/2003 = " << (c1 - c2) << " days" <<endl;
+    cout << endl << "================= Scenario 3: Car Illegally Parked (Multiple Hours Over Time) =================" << endl;
+    {
+        parkedcar car("Ford", "Mustang", "Black", "LMN456", 190);
+        parkingmeter meter(60);
+        policeofficer officer("James Brown", "4321");
 
-    // 9 Pre-increment/decrement
-    date d3(2, 29, 2008);
-    cout << "Starting date: " << d3 << endl;
-    ++d3;
-    cout << "After ++d3: " << d3 << endl;
-    --d3;
-    cout << "After --d3: " << d3 << endl;
+        parkingticket* ticket = officer.inspect(car, meter);
 
-    // 10 Post-increment/decrement
-    d3++;
-    cout << "After d3++: " << d3 << endl;
-    d3--;
-    cout << "After d3--: " << d3 << endl;
+        if (ticket)
+            ticket->printtix();
+        delete ticket;
+    }
 
-    // 11 Year rollover test
-    date d4(12, 31, 2024);
-    cout << endl << "Start: " << d4 << endl;
-    d4++;
-    cout << "After d4++: " << d4 << endl;
-    d4--;
-    cout << "After d4--: " << d4 << endl;
+    cout << endl << "============================== Scenario 4: Multiple Cars Inspected ============================" << endl;
+    {
+        policeofficer officer("Eric Shawn", "9999");
 
-    // 12 cin >> and cout <<
-    date userdate;
-    cin >> userdate;
-    cout << "You entered: " << userdate << endl;
+        parkedcar car1("Kia", "Soul", "Green", "KIASSUX", 55);
+        parkingmeter m1(30);
 
-    cout << endl << "==== TEST PLAN END ====" << endl;
+        parkedcar car2("BMW", "X5", "White", "NOBLINKA", 120);
+        parkingmeter m2(60);
+
+        parkedcar car3("Tame", "Impala", "Gray", "GOODBAND", 10);
+        parkingmeter m3(20);
+
+        parkingticket* t1 = officer.inspect(car1, m1);
+        parkingticket* t2 = officer.inspect(car2, m2);
+        parkingticket* t3 = officer.inspect(car3, m3);
+
+        if (t1) t1->printtix();
+        if (t2) t2->printtix();
+        if (t3) t3->printtix();
+
+        delete t1;
+        delete t2;
+        delete t3;
+    }
+
+    cout << endl << "Parking sim is done" << endl;
     return 0;
 }
+
 
 
 
